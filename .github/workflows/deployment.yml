@@ -29,7 +29,7 @@ jobs:
           echo "OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}" >> $GITHUB_ENV
       - name: Deploy Docker stack using Docker Swarm
         env:
-          DATABASE_URL: ${{ vars.GITHUB_DATABASE_URL }}
+          DATABASE_URL: ${{ env.GITHUB_DATABASE_URL }}
           NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
           NEXTAUTH_URL: ${{ secrets.NEXTAUTH_URL }}
           GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
