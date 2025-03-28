@@ -19,7 +19,7 @@ jobs:
     steps:
       - name: Read environment variables
         run: |
-          echo "DATABASE_URL is ${{ vars.DATABASE_URL }}"
+          echo "DATABASE_URL is ${{ env.DATABASE_URL }}"
       - name: Deploy Docker stack using Docker Swarm
         env:
           DATABASE_URL: ${{ env.DATABASE_URL }}
