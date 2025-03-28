@@ -1,0 +1,36 @@
+# Versioning and metadata
+.git
+.github
+.gitignore
+.dockerignore
+
+# Build dependencies
+node_modules
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+
+# Environment (contains sensitive data)
+.env
+.env.local
+
+# Files not required for production
+README.md
+CHANGELOG.md
+docker-compose.yml
+Dockerfile
+.editorconfig
+.prettierrc
+.eslintrc
+*.log
+*.md
+
+# Development and test folders
+__tests__
+test
+tests
+coverage
+
+# Build output
+.next/cache
+

@@ -1,0 +1,147 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL") // This part is okay, but make sure the file exists.
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id            String          @id @default(cuid())
+  name          String?
+  email         String?         @unique
+  password      String?
+  emailVerified DateTime?
+  image         String?
+  accounts      Account[]
+  sessions      Session[]
+  Authenticator Authenticator[]
+  teams         Team[]          @relation("TeamUsers")
+
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  isAdmin       Boolean         @default(false)
+  isActived     Boolean         @default(true)
+  TokenUsage    TokenUsage[]
+  teamAdminUser TeamAdminUser[]
+}
+
+model TeamAdminUser {
+  id     String @id @default(cuid())
+  teamId String
+  user   User   @relation(fields: [userId], references: [id])
+  userId String
+  Team   Team   @relation(fields: [teamId], references: [id])
+}
+
+model Team {
+  id         String          @id @default(cuid())
+  name       String
+  icon       String?
+  file       File[]
+  tokenUsage TokenUsage[]
+  assistant  Assistant[]
+  users      User[]          @relation("TeamUsers")
+  admins     TeamAdminUser[]
+  createdAt  DateTime?       @default(now())
+  updatedAt  DateTime?       @updatedAt
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model VerificationToken {
+  identifier String
+  token      String
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Authenticator {
+  credentialID         String  @unique
+  userId               String
+  providerAccountId    String
+  credentialPublicKey  String
+  counter              Int
+  credentialDeviceType String
+  credentialBackedUp   Boolean
+  transports           String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, credentialID])
+}
+
+model TokenUsage {
+  id        String   @id @default(cuid())
+  tokens    Int      @default(0)
+  user      User     @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+  model     String
+  price     Float
+  team      Team?    @relation(fields: [teamId], references: [id])
+  teamId    String?
+  userId    String
+}
+
+model Assistant {
+  id                  String  @id @default(cuid())
+  openai_assistant_id String
+  name                String
+  description         String?
+  instructions        String?
+  threadId            String?
+  model               String
+  temperatures        Int     @default(0)
+  team                Team?   @relation(fields: [teamId], references: [id])
+  teamId              String?
+
+  createdAt DateTime? @default(now())
+  updatedAt DateTime? @updatedAt
+}
+
+model File {
+  id        String  @id @default(cuid())
+  filename  String
+  bytes     Int
+  openai_id String
+  extension String
+  chatId    String?
+  Team      Team?   @relation(fields: [teamId], references: [id])
+  teamId    String?
+
+  createdAt DateTime? @default(now())
+  updatedAt DateTime? @updatedAt
+}

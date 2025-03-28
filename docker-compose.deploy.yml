@@ -1,0 +1,39 @@
+version: '3'
+
+services:
+  
+  taticca-chat:
+    image: nivaldeir/chat-ia:latest
+    restart: always
+    networks:
+      - agent_network
+      - traefik_public
+    environment:
+      DATABASE_URL: ${{DATABASE_URL}}
+      NEXTAUTH_SECRET: ${{NEXTAUTH_SECRET}}
+      NEXTAUTH_URL: ${{NEXTAUTH_URL}}
+      GOOGLE_CLIENT_ID: ${{GOOGLE_CLIENT_ID}}
+      GOOGLE_CLIENT_SECRET: ${{GOOGLE_CLIENT_SECRET}}
+      LINKEDIN_CLIENT_ID: ${{LINKEDIN_CLIENT_ID}}
+      LINKEDIN_CLIENT_SECRET: ${{LINKEDIN_CLIENT_SECRET}}
+      OPENAI_API_KEY: ${{OPENAI_API_KEY}}
+    deploy: 
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints: [node.role == manager]
+      labels:
+        - "traefik.enable=true"
+        - "traefik.docker.network=traefik_public"
+        - "traefik.http.routers.taticca-chatv2.rule=Host(`frontend-chatv2.nivaldeirsoft.com.br`)"
+        - "traefik.http.routers.taticca-chatv2.entrypoints=websecure"
+        - "traefik.http.routers.taticca-chatv2.tls.certresolver=le"
+        - "traefik.http.routers.taticca-chatv2.service=taticca-chatv2"
+        - "traefik.http.services.taticca-chatv2.loadbalancer.server.port=3000"
+
+networks:
+  traefik_public:
+    external: true
+    attachable: true
+  agent_network:
+    external: true
