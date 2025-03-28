@@ -17,16 +17,9 @@ jobs:
     name: Continuous Deployment
     needs: [build_image]
     steps:
-      - name: Set environment variables
+      - name: Read environment variables
         run: |
-          echo "DATABASE_URL=${{ vars.DATABASE_URL }}" >> $GITHUB_ENV
-          echo "NEXTAUTH_SECRET=${{ secrets.NEXTAUTH_SECRET }}" >> $GITHUB_ENV
-          echo "NEXTAUTH_URL=${{ secrets.NEXTAUTH_URL }}" >> $GITHUB_ENV
-          echo "GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}" >> $GITHUB_ENV
-          echo "GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}" >> $GITHUB_ENV
-          echo "LINKEDIN_CLIENT_ID=${{ secrets.LINKEDIN_CLIENT_ID }}" >> $GITHUB_ENV
-          echo "LINKEDIN_CLIENT_SECRET=${{ secrets.LINKEDIN_CLIENT_SECRET }}" >> $GITHUB_ENV
-          echo "OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}" >> $GITHUB_ENV
+          echo "DATABASE_URL is ${{ vars.DATABASE_URL }}"
       - name: Deploy Docker stack using Docker Swarm
         env:
           DATABASE_URL: ${{ env.DATABASE_URL }}
