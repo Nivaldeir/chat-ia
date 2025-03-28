@@ -2,6 +2,7 @@ version: '3'
 
 services:
   
+
   taticca-chat:
     image: nivaldeir/chat-ia:latest
     restart: always
@@ -9,14 +10,14 @@ services:
       - agent_network
       - traefik_public
     environment:
-      DATABASE_URL: ${{DATABASE_URL}}
-      NEXTAUTH_SECRET: ${{NEXTAUTH_SECRET}}
-      NEXTAUTH_URL: ${{NEXTAUTH_URL}}
-      GOOGLE_CLIENT_ID: ${{GOOGLE_CLIENT_ID}}
-      GOOGLE_CLIENT_SECRET: ${{GOOGLE_CLIENT_SECRET}}
-      LINKEDIN_CLIENT_ID: ${{LINKEDIN_CLIENT_ID}}
-      LINKEDIN_CLIENT_SECRET: ${{LINKEDIN_CLIENT_SECRET}}
-      OPENAI_API_KEY: ${{OPENAI_API_KEY}}
+      DATABASE_URL: {{DATABASE_URL}}
+      NEXTAUTH_SECRET: {{NEXTAUTH_SECRET}}
+      NEXTAUTH_URL: {{NEXTAUTH_URL}}
+      GOOGLE_CLIENT_ID: {{GOOGLE_CLIENT_ID}}
+      GOOGLE_CLIENT_SECRET: {{GOOGLE_CLIENT_SECRET}}
+      LINKEDIN_CLIENT_ID: {{LINKEDIN_CLIENT_ID}}
+      LINKEDIN_CLIENT_SECRET: {{LINKEDIN_CLIENT_SECRET}}
+      OPENAI_API_KEY: {{OPENAI_API_KEY}}
     deploy: 
       mode: replicated
       replicas: 1
