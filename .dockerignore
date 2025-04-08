@@ -11,8 +11,8 @@ yarn-debug.log
 yarn-error.log
 
 # Environment (contains sensitive data)
-.env
-.env.local
+# .env
+# .env.local
 
 # Files not required for production
 README.md

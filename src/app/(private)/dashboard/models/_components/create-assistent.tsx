@@ -1,6 +1,6 @@
 'use client'
+
 import CustomModal from "@/components/custom-modal"
-import { DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -20,21 +20,27 @@ import { useFetcher } from "@/hooks/use-fetcher"
 import { useSearchParams } from "next/navigation"
 import { toast } from "sonner"
 import { useModal } from "@/contexts/modal"
-
+import { useEffect } from "react"
 
 type ApiResponse = {
   message: string
   data: File[]
 }
-export const CreateAssistent = () => {
+
+type Props = {
+  assistantData?: z.infer<typeof formCreateAssistentSchema> & { id: string }
+}
+
+export const CreateOrEditAssistant = ({ assistantData }: Props) => {
   const searchParams = useSearchParams()
   const { setClose } = useModal()
   const params = new URLSearchParams(searchParams.toString())
   const team = params.get("team")
+
   const { data } = useFetcher<ApiResponse>(`/api/openai/file?team=${team}`)
   const form = useForm<z.infer<typeof formCreateAssistentSchema>>({
     resolver: zodResolver(formCreateAssistentSchema),
-    defaultValues: {
+    defaultValues: assistantData ?? {
       name: '',
       description: '',
       model: EnumModel.GPT_4O,
@@ -45,21 +51,35 @@ export const CreateAssistent = () => {
     },
   })
 
+  // Atualiza valores se vierem por props (edição)
+  useEffect(() => {
+    if (assistantData) {
+      form.reset(assistantData)
+    }
+  }, [assistantData, form])
+
   const handleSubmit = async (data: z.infer<typeof formCreateAssistentSchema>) => {
-    const response = await fetch(`/api/openai/assistents?team=${team}`, {
-      method: 'POST',
-      body: JSON.stringify({ ...data, team }),
+    const method = 'POST'
+    const url = `/api/openai/assistents?team=${team}`
+
+    const response = await fetch(url, {
+      method,
+      body: JSON.stringify({ ...assistantData, ...data, team }),
     })
-    if (response.status === 200) {
-      toast.success("Assistente criado com sucesso")
+
+    if (response.ok) {
+      toast.success(assistantData ? "Assistente atualizado com sucesso" : "Assistente criado com sucesso")
       setClose()
-      return;
+    } else {
+      toast.error("Algo deu errado.")
     }
   }
 
   return (
     <CustomModal>
-      <h1 className="text-center font-bold text-lg">Criando seu assistente</h1>
+      <h1 className="text-center font-bold text-lg">
+        {assistantData ? "Editando assistente" : "Criando seu assistente"}
+      </h1>
       <Form {...form}>
         <form className="flex flex-col gap-2" onSubmit={form.handleSubmit(handleSubmit)}>
           {/* Nome */}
@@ -101,7 +121,7 @@ export const CreateAssistent = () => {
             render={({ field }) => (
               <FormItem className="flex flex-col w-full">
                 <FormLabel className="text-left text-sm text-foreground/60 flex gap-1">
-                  Modelo <Question question="" />
+                  Modelo
                 </FormLabel>
                 <FormControl>
                   <Select value={field.value} onValueChange={field.onChange}>
@@ -136,7 +156,7 @@ export const CreateAssistent = () => {
                     name="files"
                     options={!data ? [] : data?.data?.map(f => ({ value: f.id, label: f.filename, extension: f.extension }))}
                     //@ts-ignore
-                    value={data?.data?.filter(f => field.value.includes(f.id))
+                    value={data?.data?.filter(f => (field.value || []).includes(f.id))
                       .map(f => ({ value: f.id, label: f.filename, extension: f.extension }))}
                     onChange={(selected) => field.onChange(selected.map(f => f.value))}
                     formatOptionLabel={(e) => {
@@ -148,8 +168,6 @@ export const CreateAssistent = () => {
                         </div>
                       );
                     }}
-                    className="basic-multi-select"
-                    classNamePrefix="select"
                   />
                 </FormControl>
               </FormItem>
@@ -203,10 +221,10 @@ export const CreateAssistent = () => {
             {form.formState.isSubmitting ? (
               <>
                 <Loader2 className="stroke-white animate-spin" />
-                <span className="text-white">Criando</span>
+                <span className="text-white">{assistantData ? "Salvando" : "Criando"}</span>
               </>
             ) : (
-              <span className="text-white">Criar assistente</span>
+              <span className="text-white">{assistantData ? "Salvar alterações" : "Criar assistente"}</span>
             )}
           </Button>
         </form>

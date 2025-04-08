@@ -8,6 +8,11 @@ import { useSearchParams } from "next/navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { getFileIcon } from "../files/_components/file-upload";
+import { Edit } from "lucide-react";
+import { CreateOrEditAssistant } from "./_components/create-assistent";
+import { useModal } from "@/contexts/modal";
+import { EnumModel } from "@/correct/path/to/enum-model";
+
 type ApiResponse = {
   data: Assistant[]
 }
@@ -15,7 +20,7 @@ export default function ModelPage() {
   const searchParams = useSearchParams()
   const params = new URLSearchParams(searchParams.toString())
   const team = params.get("team")
-
+  const { setOpen } = useModal()
   usePageHeaderInfo({
     title: "Home",
     description: "Seus modelos",
@@ -30,6 +35,7 @@ export default function ModelPage() {
       },
     ]
   });
+
   const { data } = useFetcher<ApiResponse>(`/api/openai/assistents?team=${team}`)
   const { handleOpenCreateAssistant } = useModels()
   return (
@@ -48,12 +54,20 @@ export default function ModelPage() {
               <div className="p-3 flex justify-between items-center">
                 <CardTitle>{ass?.name}</CardTitle>
                 <div>
-                  <Label className="text-[12px] opacity-70">Arquivos:</Label>
+                  {/* <Label className="text-[12px] opacity-70">Arquivos:</Label> */}
                   <div className="flex gap-1">
                     {/* {Array.from({ length: 3 }).map((_, idx) => {
                       const { color, icon } = getFileIcon("xlsx")
                       return <div key={idx}>{icon}</div>
                     })} */}
+                    <Edit onClick={() => setOpen(<CreateOrEditAssistant assistantData={{
+                      ...ass,
+                      id: ass.id,
+                      team: team || '',
+                      model: ass.model as EnumModel,
+                      description: ass.description ?? undefined,
+                      instructions: ass.instructions ?? undefined
+                    }} />)} />
                   </div>
                 </div>
               </div>

@@ -16,12 +16,9 @@ type Props = {
 const CustomModal = ({ children, className }: Props) => {
   const { setClose, isOpen } = useModal()
   const handleClose = () => setClose()
-  console.log(isOpen)
-  useEffect(() => { console.log(isOpen) }, [handleClose])
   return (
     <DialogView isOpen={isOpen} setOpen={handleClose} className={cn(["lg:p-5 max-md:p-3 h-full max-w-[600px]", className])}>
       {children}
-      {/* Seu conteúdo do modal aqui */}
     </DialogView>
   )
 }

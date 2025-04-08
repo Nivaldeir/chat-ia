@@ -7,13 +7,17 @@ const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 type ModelConfig = {
   name: string;
+  id?: string
   description: string;
-  model: string;
   instructions: string;
   files_ids: string[];
   temperature: number;
+  model: string;
+  team?: string;
+  temperatures?: string;
+  threadId?: string
+  openai_assistant_id?: string;
 };
-
 export async function POST(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
@@ -41,48 +45,97 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: true, message: "Time não encontrado." }, { status: 404 });
     }
 
-    const { name, model, description, files_ids, instructions } = await req.json() as ModelConfig;
-    let fileRecord
-    if (files_ids[0]) {
-      fileRecord = await prisma.file.findFirst({ where: { id: files_ids[0] } });
-      if (!fileRecord) {
-        return NextResponse.json({ error: true, message: "Arquivo não encontrado." }, { status: 404 });
-      }
-    }
-
-    const vectorStore = await openai.beta.vectorStores.create({
-      name,
-      ...(fileRecord && { file_ids: [fileRecord.openai_id] })
-    });
-
-    const assistant = await openai.beta.assistants.create({
+    const body = await req.json();
+    console.log("BODY", body)
+    const {
       name,
       model,
       description,
-      instructions: instructions || "Sem instruções.",
-      tool_resources: {
-        file_search: {
-          vector_store_ids: [vectorStore.id]
-        },
-      },
-      tools: [{ type: "file_search" }]
-    });
+      files_ids = [],
+      instructions,
+      id,
+      temperature = 0.5,
+      openai_assistant_id,
+      threadId
+    } = body as Partial<ModelConfig>;
+
+    let fileRecord, vectorStoreId;
+    if (Array.isArray(files_ids) && files_ids.length > 0) {
+      fileRecord = await prisma.file.findFirst({
+        where: { id: files_ids[0] }
+      });
+      if (!fileRecord) {
+        return NextResponse.json({ error: true, message: "Arquivo não encontrado." }, { status: 404 });
+      }
+
+      const vectorStore = await openai.beta.vectorStores.create({
+        name,
+        file_ids: [fileRecord.openai_id],
+      });
+      vectorStoreId = vectorStore.id;
+    }
+
+    let assistant: any
+    if (!id) {
+      assistant = await openai.beta.assistants.create({
+        name,
+        model: model!,
+        description,
+        instructions: instructions || "Sem instruções.",
+        ...(vectorStoreId && {
+          tool_resources: {
+            file_search: {
+              vector_store_ids: [vectorStoreId],
+            },
+          },
+          tools: [{ type: "file_search" }],
+        }),
+      });
+    } else {
+      assistant = await openai.beta.assistants.update(openai_assistant_id!, {
+        name,
+        model,
+        description,
+        instructions: instructions || "Sem instruções.",
+        ...(vectorStoreId && {
+          tool_resources: {
+            file_search: {
+              vector_store_ids: [vectorStoreId],
+            },
+          },
+          tools: [{ type: "file_search" }],
+        }),
+      });
+
+    }
 
     const thread = await openai.beta.threads.create();
 
-    await prisma.assistant.create({
-      data: {
-        name,
+    await prisma.assistant.upsert({
+      where: {
+        id: id,
+      },
+      create: {
+        name: name!,
         description,
         openai_assistant_id: assistant.id,
-        model,
+        model: model!,
         teamId: team.id,
         threadId: thread.id,
-        temperatures: assistant.temperature || 0.5,
+        temperatures: assistant.temperature ?? temperature,
       },
+      update: {
+        name,
+        description,
+        openai_assistant_id: openai_assistant_id,
+        model,
+        teamId: team.id,
+        threadId: threadId,
+        temperatures: temperature,
+      }
     });
 
-    return NextResponse.json({ message: "Assistente criado e arquivo anexado!" });
+    return NextResponse.json({ message: "Assistente criado com sucesso!" });
   } catch (error: any) {
     console.error(error);
     return NextResponse.json({ error: true, message: error.message || "Erro interno." }, { status: 500 });
