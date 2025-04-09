@@ -11,7 +11,7 @@ import { getFileIcon } from "../files/_components/file-upload";
 import { Edit } from "lucide-react";
 import { CreateOrEditAssistant } from "./_components/create-assistent";
 import { useModal } from "@/contexts/modal";
-import { EnumModel } from "@/correct/path/to/enum-model";
+import { EnumModel } from "./models.types";
 
 type ApiResponse = {
   data: Assistant[]
