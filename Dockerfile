@@ -7,6 +7,9 @@ RUN npm install
 
 COPY . .
 
+ARG OPENAI_API_KEY
+ENV OPENAI_API_KEY=$OPENAI_API_KEY
+
 RUN npx prisma generate
 # RUN npx prisma migrate deploy
 RUN npm run build
