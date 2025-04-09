@@ -13,21 +13,23 @@ jobs:
     steps:
       - name: Obtendo o código
         uses: actions/checkout@v4
-        
+
       - name: Autenticação no Docker Hub
         uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-          
+
       - name: Build e Push da Imagem Docker
         uses: docker/build-push-action@v5
         with:
-          context: ./ 
+          context: ./
           file: ./Dockerfile
           push: true
           tags: |
             nivaldeir/chat-ia:v2
+          build-args: |
+            OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}
 
   deploy:
     runs-on: [self-hosted]
