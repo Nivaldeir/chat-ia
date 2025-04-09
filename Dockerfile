@@ -11,7 +11,7 @@ RUN npx prisma generate
 RUN npx prisma migrate deploy
 RUN npm run build
 
-COPY .env /app/.env
+# COPY .env /app/.env
 
 EXPOSE 3000
 
