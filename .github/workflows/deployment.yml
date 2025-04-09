@@ -30,6 +30,7 @@ jobs:
             nivaldeir/chat-ia:v2
           build-args: |
             OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}
+            DATABASE_URL=${{ secrets.DATABASE_URL }}
 
   deploy:
     runs-on: [self-hosted]
