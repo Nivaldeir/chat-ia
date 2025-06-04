@@ -113,7 +113,7 @@ export async function POST(req: NextRequest) {
 
     await prisma.assistant.upsert({
       where: {
-        id: id,
+        id: id ?? assistant.id,
       },
       create: {
         name: name!,
