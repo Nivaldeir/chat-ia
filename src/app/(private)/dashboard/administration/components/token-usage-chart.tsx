@@ -26,7 +26,6 @@ const chartConfig = {
 
 export function TokenUsageChart() {
   const { data } = useFetcher<ApiResponse>(`/api/dashboard/token`);
-  console.log("API Response:", data?.data);
 
   // Extraindo chaves válidas (times) sem contar "date"
   const keys = Object.keys(data?.data?.[0] ?? {}).filter((k) => k !== "date");

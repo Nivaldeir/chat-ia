@@ -7,18 +7,19 @@ const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 type ModelConfig = {
   name: string;
-  id?: string
+  id?: string;
   description: string;
   instructions: string;
   files_ids: string[];
   temperature: number;
   model: string;
   team?: string;
-  temperatures?: string;
-  threadId?: string
+  threadId?: string;
   openai_assistant_id?: string;
 };
+
 export async function POST(req: NextRequest) {
+  console.log(req.body)
   try {
     const { searchParams } = new URL(req.url);
     const teamName = searchParams.get("team");
@@ -31,85 +32,79 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: true, message: "Usuário não autenticado." }, { status: 401 });
     }
 
-    const user = await prisma.user.findUnique({
-      where: { email: session.user.email }
-    });
-    if (!user) {
-      return NextResponse.json({ error: true, message: "Usuário não encontrado." }, { status: 404 });
-    }
+    const user = await prisma.user.findUnique({ where: { email: session.user.email } });
+    if (!user) return NextResponse.json({ error: true, message: "Usuário não encontrado." }, { status: 404 });
 
-    const team = await prisma.team.findFirst({
-      where: { name: teamName }
-    });
-    if (!team) {
-      return NextResponse.json({ error: true, message: "Time não encontrado." }, { status: 404 });
-    }
+    const team = await prisma.team.findFirst({ where: { name: teamName } });
+    if (!team) return NextResponse.json({ error: true, message: "Time não encontrado." }, { status: 404 });
 
     const body = await req.json();
-    console.log("BODY", body)
+    console.log(body)
     const {
       name,
       model,
       description,
       files_ids = [],
-      instructions,
+      instructions = "Sem instruções.",
       id,
       temperature = 0.5,
       openai_assistant_id,
-      threadId
+      threadId,
     } = body as Partial<ModelConfig>;
 
-    let fileRecord, vectorStoreId;
-    if (Array.isArray(files_ids) && files_ids.length > 0) {
-      fileRecord = await prisma.file.findFirst({
-        where: { id: files_ids[0] }
-      });
-      if (!fileRecord) {
-        return NextResponse.json({ error: true, message: "Arquivo não encontrado." }, { status: 404 });
-      }
+    let vectorStoreId: string | undefined = undefined;
 
+    // Verifica e carrega arquivos válidos
+    const fileRecords = await prisma.file.findMany({
+      where: { id: { in: files_ids } },
+    });
+
+    if (files_ids.length && fileRecords.length !== files_ids.length) {
+      return NextResponse.json({ error: true, message: "Um ou mais arquivos não foram encontrados." }, { status: 404 });
+    }
+
+    if (fileRecords.length > 0) {
       const vectorStore = await openai.beta.vectorStores.create({
         name,
-        file_ids: [fileRecord.openai_id],
+        file_ids: fileRecords.map((f) => f.openai_id),
       });
       vectorStoreId = vectorStore.id;
     }
 
-    let assistant: any
+    let assistant;
     if (!id) {
       assistant = await openai.beta.assistants.create({
         name,
         model: model!,
         description,
-        instructions: instructions || "Sem instruções.",
+        instructions,
         ...(vectorStoreId && {
           tool_resources: {
-            file_search: {
-              vector_store_ids: [vectorStoreId],
-            },
+            file_search: { vector_store_ids: [vectorStoreId] },
           },
           tools: [{ type: "file_search" }],
         }),
       });
     } else {
-      assistant = await openai.beta.assistants.update(openai_assistant_id!, {
+      if (!openai_assistant_id) {
+        return NextResponse.json({ error: true, message: "ID do assistente OpenAI é obrigatório para update." }, { status: 400 });
+      }
+
+      assistant = await openai.beta.assistants.update(openai_assistant_id, {
         name,
-        model,
+        model: model!,
         description,
-        instructions: instructions || "Sem instruções.",
+        instructions,
         ...(vectorStoreId && {
           tool_resources: {
-            file_search: {
-              vector_store_ids: [vectorStoreId],
-            },
+            file_search: { vector_store_ids: [vectorStoreId] },
           },
           tools: [{ type: "file_search" }],
         }),
       });
-
     }
 
-    const thread = await openai.beta.threads.create();
+    const thread = threadId ?? (await openai.beta.threads.create()).id;
 
     await prisma.assistant.upsert({
       where: {
@@ -117,27 +112,30 @@ export async function POST(req: NextRequest) {
       },
       create: {
         name: name!,
-        description,
+        description: description!,
+        openai_assistant_id: assistant.id,
+        instructions: instructions,
+        model: model!,
+        teamId: team.id,
+        threadId: thread,
+        temperatures: temperature,
+      },
+      update: {
+        name: name!,
+        description: description!,
         openai_assistant_id: assistant.id,
         model: model!,
         teamId: team.id,
-        threadId: thread.id,
-        temperatures: assistant.temperature ?? temperature,
-      },
-      update: {
-        name,
-        description,
-        openai_assistant_id: openai_assistant_id,
-        model,
-        teamId: team.id,
-        threadId: threadId,
+        instructions: instructions,
+        threadId: thread,
         temperatures: temperature,
-      }
+      },
     });
 
-    return NextResponse.json({ message: "Assistente criado com sucesso!" });
+    return NextResponse.json({ message: "Assistente salvo com sucesso!", assistantId: assistant.id });
+
   } catch (error: any) {
-    console.error(error);
+    console.error("Erro no POST /assistants:", error);
     return NextResponse.json({ error: true, message: error.message || "Erro interno." }, { status: 500 });
   }
 }
@@ -151,12 +149,12 @@ export async function GET(req: NextRequest) {
     }
 
     const assistants = await prisma.assistant.findMany({
-      where: { team: { name: teamName } }
+      where: { team: { name: teamName } },
     });
 
     return NextResponse.json({ message: "Assistentes encontrados!", data: assistants });
   } catch (error: any) {
-    console.error(error);
+    console.error("Erro no GET /assistants:", error);
     return NextResponse.json({ error: true, message: error.message || "Erro interno." }, { status: 500 });
   }
 }

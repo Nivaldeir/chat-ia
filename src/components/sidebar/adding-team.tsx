@@ -45,7 +45,6 @@ export const AddingTeam = () => {
     })
     const output = await response.json()
     if (response.status == 201) {
-      console.log("SESSION ", session?.user, output.team)
       await update({
         teams: [...(session?.user?.teams || []), {...output.team, admin: true}],
       });

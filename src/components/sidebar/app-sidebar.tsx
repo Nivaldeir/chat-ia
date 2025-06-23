@@ -46,7 +46,7 @@ const data = {
       isActive: false,
       items: [
         {
-          title: "Usuarios",
+          title: "Usuários",
           url: "/dashboard/users",
         },
         {

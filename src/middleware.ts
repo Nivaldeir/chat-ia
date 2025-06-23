@@ -20,7 +20,6 @@ export async function middleware(request: NextRequest) {
   // Se houver token, tenta decodificar
   if (tokenNext && requiresAuth) {
     try {
-      console.log(tokenNext)
       const decodedToken = await decode({
         token: tokenNext,
         secret: process.env.NEXTAUTH_SECRET!,

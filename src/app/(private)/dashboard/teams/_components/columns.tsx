@@ -43,7 +43,7 @@ export const teams_column: ColumnDef<Input>[] = [
   },
   {
     accessorKey: 'user',
-    header: () => <div className="text-center uppercase text-[11px]">Usuarios</div>,
+    header: () => <div className="text-center uppercase text-[11px]">Usuários</div>,
     cell: ({ row }) => <div className="text-center text-[11px] font-medium">{row.original?.users.length}</div>,
   },
   {

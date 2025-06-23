@@ -5,9 +5,8 @@ import { Button } from "@/components/ui/button";
 import { useFetcher } from "@/hooks/use-fetcher";
 import { Assistant } from "@prisma/client";
 import { useSearchParams } from "next/navigation";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { getFileIcon } from "../files/_components/file-upload";
 import { Edit } from "lucide-react";
 import { CreateOrEditAssistant } from "./_components/create-assistent";
 import { useModal } from "@/contexts/modal";
@@ -37,6 +36,7 @@ export default function ModelPage() {
   });
 
   const { data } = useFetcher<ApiResponse>(`/api/openai/assistents?team=${team}`)
+  console.log(data)
   const { handleOpenCreateAssistant } = useModels()
   return (
     <section className="container mx-auto">
@@ -54,12 +54,7 @@ export default function ModelPage() {
               <div className="p-3 flex justify-between items-center">
                 <CardTitle>{ass?.name}</CardTitle>
                 <div>
-                  {/* <Label className="text-[12px] opacity-70">Arquivos:</Label> */}
                   <div className="flex gap-1">
-                    {/* {Array.from({ length: 3 }).map((_, idx) => {
-                      const { color, icon } = getFileIcon("xlsx")
-                      return <div key={idx}>{icon}</div>
-                    })} */}
                     <Edit onClick={() => setOpen(<CreateOrEditAssistant assistantData={{
                       ...ass,
                       id: ass.id,

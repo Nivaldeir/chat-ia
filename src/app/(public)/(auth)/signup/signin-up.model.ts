@@ -13,7 +13,6 @@ export const SignUpModel = () => {
 
   const signInWithCredentials = async (data: CreateUserProps) => {
     const output = await createUser(data)
-    console.log(output)
     if (!output.error) {
       toast.success("Usuario criado com sucesso")
     } else {

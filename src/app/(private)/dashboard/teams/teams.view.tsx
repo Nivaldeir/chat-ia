@@ -47,7 +47,7 @@ export const TeamView = ({ teams }: Props) => {
     <section className="w-full px-4">
       <header className="flex justify-between items-center mb-4">
         <div>
-          <h1 className="text-2xl text-black font-bold">Usuarios</h1>
+          <h1 className="text-2xl text-black font-bold">Usuários</h1>
         </div>
         <div>
           <div className="flex gap-2">

@@ -8,13 +8,11 @@ export async function POST(req: NextRequest) {
   if (!session?.user) {
     return NextResponse.redirect("/signin")
   }
-  console.log(session.user)
   const user = await prisma.user.findUnique({
     where: {
       email: session.user.email!
     }
   })
-  console.log(user)
   const team = await prisma.team.create({
     data: {
       name: formData.name,

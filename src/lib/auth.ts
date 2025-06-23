@@ -30,13 +30,11 @@ export const nextAuthConfig = NextAuth({
           where: { email: credentials.email },
           include: { teams: true },
         });
-        console.log('user', user)
         if (!user) {
           throw new Error("Usuário não encontrado");
         }
         // const passwordHassg = 
         const isMatch = await bcrypt.compare(credentials.password, user!.password!);
-        console.log("Resultado da comparação:", isMatch);
         if (!isMatch) throw new Error("Usuário ou Senha não compativel");
         return user
       },
