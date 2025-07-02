@@ -10,7 +10,7 @@ services:
       - agent_network
       - traefik_public
     environment:
-      DATABASE_URL: ${{secrets.DATABASE_URL}}
+      DATABASE_URL: "postgres://postgres:0068620748@194.163.157.234:5432/taticca_ai"
       NEXTAUTH_SECRET: ${{secrets.NEXTAUTH_SECRET}}
       NEXTAUTH_URL: ${{secrets.NEXTAUTH_URL}}
       GOOGLE_CLIENT_ID: ${{secrets.GOOGLE_CLIENT_ID}}
